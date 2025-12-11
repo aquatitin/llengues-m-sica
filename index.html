@@ -13,64 +13,84 @@
     <div id="root"></div>
     
     <script type="text/babel">
-        import React, { useState } from 'react';
-import { Upload, Music, BarChart3, Loader2 } from 'lucide-react';
+        const { useState } = React;
 
-export default function SpotifyLanguageAnalyzer() {
-  const [files, setFiles] = useState([]);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [results, setResults] = useState(null);
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
+        // Icones SVG inline
+        const Upload = () => (
+          <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+        );
 
-  const handleFileUpload = (e) => {
-    const uploadedFiles = Array.from(e.target.files);
-    setFiles(uploadedFiles);
-    setResults(null);
-  };
+        const Music = ({ className }) => (
+          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          </svg>
+        );
 
-  const processFiles = async () => {
-    setAnalyzing(true);
-    setProgress({ current: 0, total: 0 });
+        const BarChart3 = ({ className }) => (
+          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        );
 
-    try {
-      // Llegir i processar tots els arxius
-      let allTracks = [];
-      
-      for (const file of files) {
-        const text = await file.text();
-        const data = JSON.parse(text);
-        allTracks = allTracks.concat(data);
-      }
+        const Loader2 = ({ className }) => (
+          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        );
 
-      // Extreure cançons úniques (eliminar duplicats)
-      const uniqueTracks = new Map();
-      allTracks.forEach(track => {
-        if (track.master_metadata_track_name && track.master_metadata_album_artist_name) {
-          const key = `${track.master_metadata_track_name}|||${track.master_metadata_album_artist_name}`;
-          if (!uniqueTracks.has(key)) {
-            uniqueTracks.set(key, {
-              track: track.master_metadata_track_name,
-              artist: track.master_metadata_album_artist_name,
-              plays: 0
-            });
-          }
-          uniqueTracks.get(key).plays++;
-        }
-      });
+        function SpotifyLanguageAnalyzer() {
+          const [files, setFiles] = useState([]);
+          const [analyzing, setAnalyzing] = useState(false);
+          const [results, setResults] = useState(null);
+          const [progress, setProgress] = useState({ current: 0, total: 0 });
 
-      // LIMITAR A 100 CANÇONS
-      const tracksArray = Array.from(uniqueTracks.values()).slice(0, 100);
-      setProgress({ current: 0, total: tracksArray.length });
+          const handleFileUpload = (e) => {
+            const uploadedFiles = Array.from(e.target.files);
+            setFiles(uploadedFiles);
+            setResults(null);
+          };
 
-      // Analitzar idiomes en lots
-      const batchSize = 20;
-      const languageCount = {};
-      const tracksByLanguage = {};
+          const processFiles = async () => {
+            setAnalyzing(true);
+            setProgress({ current: 0, total: 0 });
 
-      for (let i = 0; i < tracksArray.length; i += batchSize) {
-        const batch = tracksArray.slice(i, i + batchSize);
-        
-        const prompt = `Analitza l'idioma de les següents cançons. IMPORTANT: Basa't principalment en l'ARTISTA, ja que els artistes normalment canten en un idioma consistent, encara que el títol de la cançó pugui estar en un altre idioma. Per exemple, "Roadtrip" de Triquell està en català perquè Triquell canta en català.
+            try {
+              let allTracks = [];
+              
+              for (const file of files) {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                allTracks = allTracks.concat(data);
+              }
+
+              const uniqueTracks = new Map();
+              allTracks.forEach(track => {
+                if (track.master_metadata_track_name && track.master_metadata_album_artist_name) {
+                  const key = `${track.master_metadata_track_name}|||${track.master_metadata_album_artist_name}`;
+                  if (!uniqueTracks.has(key)) {
+                    uniqueTracks.set(key, {
+                      track: track.master_metadata_track_name,
+                      artist: track.master_metadata_album_artist_name,
+                      plays: 0
+                    });
+                  }
+                  uniqueTracks.get(key).plays++;
+                }
+              });
+
+              const tracksArray = Array.from(uniqueTracks.values()).slice(0, 100);
+              setProgress({ current: 0, total: tracksArray.length });
+
+              const batchSize = 20;
+              const languageCount = {};
+              const tracksByLanguage = {};
+
+              for (let i = 0; i < tracksArray.length; i += batchSize) {
+                const batch = tracksArray.slice(i, i + batchSize);
+                
+                const prompt = `Analitza l'idioma de les següents cançons. IMPORTANT: Basa't principalment en l'ARTISTA, ja que els artistes normalment canten en un idioma consistent, encara que el títol de la cançó pugui estar en un altre idioma. Per exemple, "Roadtrip" de Triquell està en català perquè Triquell canta en català.
 
 ${batch.map((t, idx) => `${idx + 1}. "${t.track}" - ${t.artist}`).join('\n')}
 
@@ -82,207 +102,209 @@ Respon NOMÉS amb un JSON array sense cap text addicional, markdown ni explicaci
 
 Idiomes possibles: català, castellà, anglès, francès, italià, portuguès, alemany, coreà, japonès, altres`;
 
-        const response = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: 1000,
-            messages: [
-              { role: "user", content: prompt }
-            ],
-          })
-        });
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    model: "claude-sonnet-4-20250514",
+                    max_tokens: 1000,
+                    messages: [
+                      { role: "user", content: prompt }
+                    ],
+                  })
+                });
 
-        if (!response.ok) {
-          throw new Error(`Error API: ${response.status}`);
+                if (!response.ok) {
+                  throw new Error(`Error API: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log("Resposta API:", data);
+                
+                const text = data.content.find(c => c.type === "text")?.text || "";
+                console.log("Text rebut:", text);
+                
+                const cleanText = text.replace(/```json|```/g, "").trim();
+                console.log("Text netejat:", cleanText);
+                
+                const languages = JSON.parse(cleanText);
+
+                languages.forEach(({ index, language }) => {
+                  const track = batch[index - 1];
+                  const lang = language.toLowerCase();
+                  
+                  languageCount[lang] = (languageCount[lang] || 0) + 1;
+                  if (!tracksByLanguage[lang]) {
+                    tracksByLanguage[lang] = [];
+                  }
+                  tracksByLanguage[lang].push(track);
+                });
+
+                setProgress({ current: Math.min(i + batchSize, tracksArray.length), total: tracksArray.length });
+              }
+
+              const total = tracksArray.length;
+              const percentages = Object.entries(languageCount).map(([lang, count]) => ({
+                language: lang.charAt(0).toUpperCase() + lang.slice(1),
+                count,
+                percentage: ((count / total) * 100).toFixed(1),
+                tracks: tracksByLanguage[lang]
+              })).sort((a, b) => b.count - a.count);
+
+              setResults({
+                total,
+                totalPlays: allTracks.length,
+                percentages
+              });
+
+            } catch (error) {
+              console.error("Error complet:", error);
+              alert(`Error processant els arxius: ${error.message}\n\nMira la consola del navegador (F12) per més detalls.`);
+            }
+
+            setAnalyzing(false);
+          };
+
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 p-4">
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-white rounded-2xl shadow-2xl p-8 mb-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Music className="w-10 h-10 text-green-600" />
+                    <h1 className="text-3xl font-bold text-gray-800">Analitzador d'Idiomes de Spotify</h1>
+                  </div>
+
+                  <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 className="font-semibold text-blue-900 mb-2">Com obtenir els teus arxius de Spotify:</h3>
+                    <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                      <li>Ves a <a href="https://www.spotify.com/account/privacy/" target="_blank" rel="noopener noreferrer" className="underline font-medium">spotify.com/account/privacy/</a></li>
+                      <li>Desplaça't fins a "Descarrega les teves dades"</li>
+                      <li>Demana les teves dades (poden trigar uns dies)</li>
+                      <li>Descarrega el fitxer ZIP i extreu els arxius JSON d'històric</li>
+                      <li>Puja aquí els arxius que comencin amb "Streaming_History" o similar</li>
+                    </ol>
+                    <p className="mt-3 text-sm text-blue-700 font-medium">ℹ️ Només s'analitzaran les primeres 100 cançons úniques</p>
+                  </div>
+
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-green-500 transition-colors">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        multiple
+                        accept=".json"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      <Upload />
+                      <p className="text-lg font-medium text-gray-700 mb-2">
+                        {files.length > 0 
+                          ? `${files.length} arxiu${files.length > 1 ? 's' : ''} seleccionat${files.length > 1 ? 's' : ''}`
+                          : 'Clica per pujar arxius JSON'
+                        }
+                      </p>
+                      <p className="text-sm text-gray-500">Pots seleccionar múltiples arxius</p>
+                    </label>
+                  </div>
+
+                  {files.length > 0 && !analyzing && !results && (
+                    <button
+                      onClick={processFiles}
+                      className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                      <BarChart3 className="w-5 h-5" />
+                      Analitzar Idiomes
+                    </button>
+                  )}
+
+                  {analyzing && (
+                    <div className="mt-6 text-center">
+                      <Loader2 className="w-12 h-12 mx-auto mb-4 text-green-600 animate-spin" />
+                      <p className="text-lg font-medium text-gray-700">
+                        Analitzant cançons... {progress.current} / {progress.total}
+                      </p>
+                      <div className="mt-4 w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-green-600 h-3 rounded-full transition-all duration-300"
+                          style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {results && (
+                  <div className="bg-white rounded-2xl shadow-2xl p-8">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Resultats</h2>
+                    
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl">
+                        <p className="text-sm text-green-700 font-medium">Cançons úniques</p>
+                        <p className="text-4xl font-bold text-green-900">{results.total}</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
+                        <p className="text-sm text-blue-700 font-medium">Reproduccions totals</p>
+                        <p className="text-4xl font-bold text-blue-900">{results.totalPlays}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {results.percentages.map((item, idx) => (
+                        <div key={idx} className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-xl font-bold text-gray-800">{item.language}</h3>
+                            <div className="text-right">
+                              <p className="text-3xl font-bold text-green-600">{item.percentage}%</p>
+                              <p className="text-sm text-gray-600">{item.count} cançons</p>
+                            </div>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+                            <div 
+                              className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-500"
+                              style={{ width: `${item.percentage}%` }}
+                            />
+                          </div>
+                          <details className="text-sm">
+                            <summary className="cursor-pointer text-gray-600 hover:text-gray-800 font-medium">
+                              Mostra {item.tracks.length} cançons
+                            </summary>
+                            <ul className="mt-3 space-y-2 max-h-60 overflow-y-auto">
+                              {item.tracks.slice(0, 50).map((track, i) => (
+                                <li key={i} className="text-gray-700 py-1 border-b border-gray-100">
+                                  <span className="font-medium">{track.track}</span>
+                                  <span className="text-gray-500"> - {track.artist}</span>
+                                  <span className="text-gray-400 text-xs ml-2">({track.plays} reproduccions)</span>
+                                </li>
+                              ))}
+                              {item.tracks.length > 50 && (
+                                <li className="text-gray-500 italic">... i {item.tracks.length - 50} més</li>
+                              )}
+                            </ul>
+                          </details>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setFiles([]);
+                        setResults(null);
+                      }}
+                      className="w-full mt-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors"
+                    >
+                      Analitzar altres arxius
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
         }
 
-        const data = await response.json();
-        console.log("Resposta API:", data);
-        
-        const text = data.content.find(c => c.type === "text")?.text || "";
-        console.log("Text rebut:", text);
-        
-        // Netejar el JSON de possibles markdown
-        const cleanText = text.replace(/```json|```/g, "").trim();
-        console.log("Text netejat:", cleanText);
-        
-        const languages = JSON.parse(cleanText);
-
-        languages.forEach(({ index, language }) => {
-          const track = batch[index - 1];
-          const lang = language.toLowerCase();
-          
-          languageCount[lang] = (languageCount[lang] || 0) + 1;
-          if (!tracksByLanguage[lang]) {
-            tracksByLanguage[lang] = [];
-          }
-          tracksByLanguage[lang].push(track);
-        });
-
-        setProgress({ current: Math.min(i + batchSize, tracksArray.length), total: tracksArray.length });
-      }
-
-      // Calcular percentatges
-      const total = tracksArray.length;
-      const percentages = Object.entries(languageCount).map(([lang, count]) => ({
-        language: lang.charAt(0).toUpperCase() + lang.slice(1),
-        count,
-        percentage: ((count / total) * 100).toFixed(1),
-        tracks: tracksByLanguage[lang]
-      })).sort((a, b) => b.count - a.count);
-
-      setResults({
-        total,
-        totalPlays: allTracks.length,
-        percentages
-      });
-
-    } catch (error) {
-      console.error("Error complet:", error);
-      alert(`Error processant els arxius: ${error.message}\n\nMira la consola del navegador (F12) per més detalls.`);
-    }
-
-    setAnalyzing(false);
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <Music className="w-10 h-10 text-green-600" />
-            <h1 className="text-3xl font-bold text-gray-800">Analitzador d'Idiomes de Spotify</h1>
-          </div>
-
-          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h3 className="font-semibold text-blue-900 mb-2">Com obtenir els teus arxius de Spotify:</h3>
-            <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-              <li>Ves a <a href="https://www.spotify.com/account/privacy/" target="_blank" className="underline font-medium">spotify.com/account/privacy/</a></li>
-              <li>Desplaça't fins a "Descarrega les teves dades"</li>
-              <li>Demana les teves dades (poden trigar uns dies)</li>
-              <li>Descarrega el fitxer ZIP i extreu els arxius JSON d'històric</li>
-              <li>Puja aquí els arxius que comencin amb "Streaming_History" o similar</li>
-            </ol>
-            <p className="mt-3 text-sm text-blue-700 font-medium">ℹ️ Només s'analitzaran les primeres 100 cançons úniques</p>
-          </div>
-
-          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-green-500 transition-colors">
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                multiple
-                accept=".json"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <Upload className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <p className="text-lg font-medium text-gray-700 mb-2">
-                {files.length > 0 
-                  ? `${files.length} arxiu${files.length > 1 ? 's' : ''} seleccionat${files.length > 1 ? 's' : ''}`
-                  : 'Clica per pujar arxius JSON'
-                }
-              </p>
-              <p className="text-sm text-gray-500">Pots seleccionar múltiples arxius</p>
-            </label>
-          </div>
-
-          {files.length > 0 && !analyzing && !results && (
-            <button
-              onClick={processFiles}
-              className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              <BarChart3 className="w-5 h-5" />
-              Analitzar Idiomes
-            </button>
-          )}
-
-          {analyzing && (
-            <div className="mt-6 text-center">
-              <Loader2 className="w-12 h-12 mx-auto mb-4 text-green-600 animate-spin" />
-              <p className="text-lg font-medium text-gray-700">
-                Analitzant cançons... {progress.current} / {progress.total}
-              </p>
-              <div className="mt-4 w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className="bg-green-600 h-3 rounded-full transition-all duration-300"
-                  style={{ width: `${(progress.current / progress.total) * 100}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {results && (
-          <div className="bg-white rounded-2xl shadow-2xl p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Resultats</h2>
-            
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl">
-                <p className="text-sm text-green-700 font-medium">Cançons úniques</p>
-                <p className="text-4xl font-bold text-green-900">{results.total}</p>
-              </div>
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
-                <p className="text-sm text-blue-700 font-medium">Reproduccions totals</p>
-                <p className="text-4xl font-bold text-blue-900">{results.totalPlays}</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {results.percentages.map((item, idx) => (
-                <div key={idx} className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-xl font-bold text-gray-800">{item.language}</h3>
-                    <div className="text-right">
-                      <p className="text-3xl font-bold text-green-600">{item.percentage}%</p>
-                      <p className="text-sm text-gray-600">{item.count} cançons</p>
-                    </div>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
-                    <div 
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-500"
-                      style={{ width: `${item.percentage}%` }}
-                    />
-                  </div>
-                  <details className="text-sm">
-                    <summary className="cursor-pointer text-gray-600 hover:text-gray-800 font-medium">
-                      Mostra {item.tracks.length} cançons
-                    </summary>
-                    <ul className="mt-3 space-y-2 max-h-60 overflow-y-auto">
-                      {item.tracks.slice(0, 50).map((track, i) => (
-                        <li key={i} className="text-gray-700 py-1 border-b border-gray-100">
-                          <span className="font-medium">{track.track}</span>
-                          <span className="text-gray-500"> - {track.artist}</span>
-                          <span className="text-gray-400 text-xs ml-2">({track.plays} reproduccions)</span>
-                        </li>
-                      ))}
-                      {item.tracks.length > 50 && (
-                        <li className="text-gray-500 italic">... i {item.tracks.length - 50} més</li>
-                      )}
-                    </ul>
-                  </details>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => {
-                setFiles([]);
-                setResults(null);
-              }}
-              className="w-full mt-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors"
-            >
-              Analitzar altres arxius
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+        // Renderitzar l'aplicació
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SpotifyLanguageAnalyzer />);
     </script>
 </body>
 </html>
