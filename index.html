@@ -15,7 +15,94 @@
     <script type="text/babel">
         const { useState } = React;
 
-        // Icones SVG inline
+        // Base de dades d'artistes per idioma
+        const artistDatabase = {
+          català: [
+            'els catarres', 'txarango', 'sopa de cabra', 'sau', 'oques grasses', 'manel',
+            'gossos', 'lax\'n\'busto', 'pets', 'sangtraït', 'buhos', 'doctor prats',
+            'stay homas', 'blaumut', 'mishima', 'ferran palau', 'lágrimas de sangre',
+            'obeses', 'txarango', 'joan dausà', 'la pegatina', 'els amics de les arts',
+            'els pets', 'antònia font', 'andreu rifé', 'strombers', 'txarango',
+            'triquell', 'cesk freixas', 'pepet i marieta', 'glaucs', 'smoking souls',
+            'la gossa sorda', 'verdcel', 'la troba kung-fú', 'guillamino', 'mazoni',
+            'gertrudis', 'bears in trees', 'la kinky beat', 'companyia elèctrica dharma',
+            'lluís llach', 'raimon', 'ovidi montllor', 'maria del mar bonet', 'serrat'
+          ],
+          castellà: [
+            'alejandro sanz', 'rosalía', 'c. tangana', 'pablo alborán', 'la oreja de van gogh',
+            'estopa', 'jarabe de palo', 'manolo garcía', 'joaquín sabina', 'melendi',
+            'amaral', 'mecano', 'héroes del silencio', 'duncan dhu', 'la frontera',
+            'extremoduro', 'vetusta morla', 'love of lesbian', 'fito & fitipaldis',
+            'el canto del loco', 'la habitación roja', 'izal', 'leiva', 'quevedo',
+            'bad bunny', 'rauw alejandro', 'daddy yankee', 'j balvin', 'maluma',
+            'ozuna', 'nicky jam', 'farruko', 'anuel aa', 'karol g', 'becky g',
+            'shakira', 'enrique iglesias', 'marc anthony', 'juanes', 'maná',
+            'los fabulosos cadillacs', 'soda stereo', 'café tacvba', 'enanitos verdes',
+            'la ley', 'los tres', 'los bunkers', 'los prisioneros', 'charly garcía',
+            'fito páez', 'andrés calamaro', 'gustavo cerati', 'luis alberto spinetta',
+            'bizarrap', 'duki', 'trueno', 'nicki nicole', 'tiago pzk', 'maria becerra'
+          ],
+          anglès: [
+            'taylor swift', 'ed sheeran', 'the beatles', 'queen', 'david bowie',
+            'radiohead', 'coldplay', 'arctic monkeys', 'oasis', 'blur', 'pulp',
+            'the smiths', 'joy division', 'new order', 'the cure', 'depeche mode',
+            'nirvana', 'pearl jam', 'soundgarden', 'red hot chili peppers', 'foo fighters',
+            'green day', 'blink-182', 'sum 41', 'the offspring', 'weezer',
+            'drake', 'kendrick lamar', 'kanye west', 'eminem', 'jay-z', 'nas',
+            'the weeknd', 'frank ocean', 'childish gambino', 'tyler, the creator',
+            'post malone', 'travis scott', 'lil nas x', 'dua lipa', 'ariana grande',
+            'billie eilish', 'olivia rodrigo', 'the 1975', 'imagine dragons', 'twenty one pilots',
+            'pink floyd', 'led zeppelin', 'the rolling stones', 'u2', 'r.e.m.',
+            'metallica', 'iron maiden', 'black sabbath', 'judas priest', 'ac/dc',
+            'bon jovi', 'guns n\' roses', 'aerosmith', 'kiss', 'van halen',
+            'adele', 'sam smith', 'ellie goulding', 'florence + the machine', 'mumford & sons'
+          ],
+          francès: [
+            'stromae', 'daft punk', 'édith piaf', 'jacques brel', 'charles aznavour',
+            'serge gainsbourg', 'françoise hardy', 'carla bruni', 'vanessa paradis',
+            'zaz', 'christine and the queens', 'air', 'phoenix', 'justice', 'm83',
+            'noir désir', 'têtes raides', 'manu chao', 'indochine', 'téléphone',
+            'rita mitsouko', 'nino ferrer', 'claude françois', 'johnny hallyday',
+            'renaud', 'bénabar', 'camille', 'juliette gréco', 'barbara'
+          ],
+          italià: [
+            'eros ramazzotti', 'laura pausini', 'tiziano ferro', 'giorgia', 'zucchero',
+            'ligabue', 'vasco rossi', 'gianna nannini', 'elisa', 'jovanotti',
+            'lucio dalla', 'fabrizio de andré', 'francesco guccini', 'claudio baglioni',
+            'adriano celentano', 'mina', 'lucio battisti', 'renato zero', 'pino daniele',
+            'subsonica', 'negrita', 'litfiba', 'marlene kuntz', 'max pezzali'
+          ],
+          portuguès: [
+            'amália rodrigues', 'mariza', 'carlos do carmo', 'ana moura', 'carminho',
+            'dulce pontes', 'madredeus', 'deolinda', 'gisela joão', 'antonio zambujo',
+            'xutos & pontapés', 'rui veloso', 'da weasel', 'boss ac', 'valete',
+            'caetano veloso', 'gilberto gil', 'maria bethânia', 'gal costa', 'elis regina',
+            'djavan', 'chico buarque', 'jorge ben jor', 'tim maia', 'rita lee',
+            'marisa monte', 'cássia eller', 'adriana calcanhotto', 'lenine', 'seu jorge'
+          ],
+          alemany: [
+            'rammstein', 'kraftwerk', 'tokio hotel', 'scorpions', 'die toten hosen',
+            'die ärzte', 'nena', 'falco', 'herbert grönemeyer', 'peter maffay',
+            'udo lindenberg', 'westernhagen', 'juli', 'silbermond', 'wir sind helden',
+            'sportfreunde stiller', 'fettes brot', 'sido', 'bushido', 'peter fox'
+          ],
+          coreà: [
+            'bts', 'blackpink', 'twice', 'exo', 'red velvet', 'nct', 'seventeen',
+            'stray kids', 'txt', 'itzy', 'aespa', 'ive', 'newjeans', 'le sserafim',
+            'enhypen', 'ateez', 'the boyz', 'monsta x', 'got7', 'day6', 'winner',
+            'mamamoo', 'gfriend', 'oh my girl', 'apink', 'dreamcatcher', 'loona',
+            'psy', 'bigbang', '2ne1', 'wonder girls', 'girls generation', 'super junior'
+          ],
+          japonès: [
+            'yoasobi', 'kenshi yonezu', 'official髭男dism', 'back number', 'radwimps',
+            'one ok rock', 'asian kung-fu generation', 'bump of chicken', 'amazarashi',
+            'king gnu', 'mrs. green apple', 'the oral cigarettes', 'man with a mission',
+            'utada hikaru', 'ayumi hamasaki', 'namie amuro', 'perfume', 'babymetal',
+            'aimyon', 'lisa', 'yui', 'milet', 'aimer', 'supercell', 'egoist'
+          ]
+        };
+
+        // Icones SVG
         const Upload = () => (
           <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -39,6 +126,27 @@
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
         );
+
+        // Funció per detectar idioma
+        function detectLanguage(artistName) {
+          const normalized = artistName.toLowerCase().trim();
+          
+          for (const [language, artists] of Object.entries(artistDatabase)) {
+            if (artists.some(artist => normalized.includes(artist) || artist.includes(normalized))) {
+              return language;
+            }
+          }
+          
+          // Heurística: Si conté caràcters especials, probablement no és anglès
+          if (/[àèéíòóúäëïöüñç]/i.test(artistName)) {
+            if (/[àèéíòóú]/i.test(artistName)) return 'català';
+            if (/[ñ]/i.test(artistName)) return 'castellà';
+            if (/[äöü]/i.test(artistName)) return 'alemany';
+            if (/[âêîôûëïü]/i.test(artistName)) return 'francès';
+          }
+          
+          return 'anglès'; // Per defecte
+        }
 
         function SpotifyLanguageAnalyzer() {
           const [files, setFiles] = useState([]);
@@ -83,67 +191,21 @@
               const tracksArray = Array.from(uniqueTracks.values()).slice(0, 100);
               setProgress({ current: 0, total: tracksArray.length });
 
-              const batchSize = 20;
               const languageCount = {};
               const tracksByLanguage = {};
 
-              for (let i = 0; i < tracksArray.length; i += batchSize) {
-                const batch = tracksArray.slice(i, i + batchSize);
+              // Processar cada cançó
+              tracksArray.forEach((track, index) => {
+                const language = detectLanguage(track.artist);
                 
-                const prompt = `Analitza l'idioma de les següents cançons. IMPORTANT: Basa't principalment en l'ARTISTA, ja que els artistes normalment canten en un idioma consistent, encara que el títol de la cançó pugui estar en un altre idioma. Per exemple, "Roadtrip" de Triquell està en català perquè Triquell canta en català.
-
-${batch.map((t, idx) => `${idx + 1}. "${t.track}" - ${t.artist}`).join('\n')}
-
-Respon NOMÉS amb un JSON array sense cap text addicional, markdown ni explicacions:
-[
-  {"index": 1, "language": "català"},
-  {"index": 2, "language": "castellà"}
-]
-
-Idiomes possibles: català, castellà, anglès, francès, italià, portuguès, alemany, coreà, japonès, altres`;
-
-                const response = await fetch("https://api.anthropic.com/v1/messages", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    model: "claude-sonnet-4-20250514",
-                    max_tokens: 1000,
-                    messages: [
-                      { role: "user", content: prompt }
-                    ],
-                  })
-                });
-
-                if (!response.ok) {
-                  throw new Error(`Error API: ${response.status}`);
+                languageCount[language] = (languageCount[language] || 0) + 1;
+                if (!tracksByLanguage[language]) {
+                  tracksByLanguage[language] = [];
                 }
-
-                const data = await response.json();
-                console.log("Resposta API:", data);
+                tracksByLanguage[language].push(track);
                 
-                const text = data.content.find(c => c.type === "text")?.text || "";
-                console.log("Text rebut:", text);
-                
-                const cleanText = text.replace(/```json|```/g, "").trim();
-                console.log("Text netejat:", cleanText);
-                
-                const languages = JSON.parse(cleanText);
-
-                languages.forEach(({ index, language }) => {
-                  const track = batch[index - 1];
-                  const lang = language.toLowerCase();
-                  
-                  languageCount[lang] = (languageCount[lang] || 0) + 1;
-                  if (!tracksByLanguage[lang]) {
-                    tracksByLanguage[lang] = [];
-                  }
-                  tracksByLanguage[lang].push(track);
-                });
-
-                setProgress({ current: Math.min(i + batchSize, tracksArray.length), total: tracksArray.length });
-              }
+                setProgress({ current: index + 1, total: tracksArray.length });
+              });
 
               const total = tracksArray.length;
               const percentages = Object.entries(languageCount).map(([lang, count]) => ({
@@ -161,7 +223,7 @@ Idiomes possibles: català, castellà, anglès, francès, italià, portuguès, a
 
             } catch (error) {
               console.error("Error complet:", error);
-              alert(`Error processant els arxius: ${error.message}\n\nMira la consola del navegador (F12) per més detalls.`);
+              alert(`Error processant els arxius: ${error.message}\n\nAssegura't que són arxius JSON vàlids de Spotify.`);
             }
 
             setAnalyzing(false);
@@ -302,7 +364,6 @@ Idiomes possibles: català, castellà, anglès, francès, italià, portuguès, a
           );
         }
 
-        // Renderitzar l'aplicació
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<SpotifyLanguageAnalyzer />);
     </script>
